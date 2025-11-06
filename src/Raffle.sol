@@ -23,7 +23,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.19;
 
-import {VRFConsumerBaseV2Plus} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 
 
 /**
@@ -32,7 +32,7 @@ import {VRFConsumerBaseV2Plus} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev
  * @notice This contract is for creating a simple raffle
  * @dev Implements Chainlink VRFv2.5
  */ 
-contract Raffle{
+contract Raffle is VRFConsumerBaseV2Plus{
     /* Errors */
     error Raffle__SendMoreToEnterRaffle();
 
@@ -40,15 +40,17 @@ contract Raffle{
     // @dev The duration of the lottery in seconds
     uint256 private immutable i_interval;
     uint256 private s_lastTimeStamp;
-    address[] payable private s_players;
+    address payable[] private s_players;
 
     /* Events */
     event RaffleEntered(address indexed player);
     
-    construtor(uint256 i_entranceFee, uint256 interval) {
+    constructor(uint256 i_entranceFee, uint256 interval, address _vrfCoordinator)
+    VRFConsumerBaseV2Plus(vrfCoordinator){
         i_entranceFee = entranceFee;
         i_interval = interval;
         s_lastTimeStamp = block.timestamp;
+        s_vrfCoordinator.requestRandomWords();
     }
     function enterRaffle() external payable {
         // require(msg.value >= i_entranceFee, "Not enough ETH sent");
@@ -78,6 +80,8 @@ contract Raffle{
             })
         );
     }
+
+    function fulfillRandomWords(uint256 requestId, uint256[] calldata randomWords) internal override{}
 
     /** Getter Functions */
     function getEntranceFee() external view returns(uint256){
